@@ -1,9 +1,6 @@
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
-import java.io.IOException;
-
-import javax.imageio.ImageIO;
+import java.util.ArrayList;
 import javax.swing.*; 
 
 public class Gui extends JFrame implements ActionListener{
@@ -20,7 +17,7 @@ public class Gui extends JFrame implements ActionListener{
 	 private static JTextField textbox2;
 	 private static JTextField textbox3;
 	 private static JTextField textbox4;
-	 private static vectorQuantization vq = new vectorQuantization();
+	 private static vectorQuantization v = new vectorQuantization();
 	 Gui()
 	 {
 		 	setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -137,31 +134,25 @@ public class Gui extends JFrame implements ActionListener{
 	    { 
 	        String s = e.getActionCommand(); 
 	        if (s.equals("Compression")) 
-	        { 
-	        	int vectorHeigth = Integer.parseInt(textbox1.getText().toString());
-	        	int vectorWidth = Integer.parseInt(textbox2.getText().toString());
-	        	int codeBookSize = Integer.parseInt(textbox3.getText().toString());
+	        {
 	        	String path = textbox4.getText();
-	        	try 
-	        	{
-					vectorQuantization.Compress(vectorHeigth, vectorWidth, codeBookSize, path);
-				} 
-	        	catch (IOException e1) 
-	        	{
-                    e1.printStackTrace();
-				}
+				int numOfLevels = Integer.parseInt(textbox3.getText());
+				int widthOfBlock = Integer.parseInt(textbox2.getText());
+				int heightOfBlock = Integer.parseInt(textbox1.getText());
+				v.originalImage = Image.readImage(path);
+
+
+				int numOfRows = v.originalImage.length / heightOfBlock; // lel new matrix li mtkwna mn vectors
+				int numOfCols = v.originalImage[0].length / heightOfBlock;
+				vector[][] vectors = new vector[numOfRows][numOfCols]; // 2D array consist of vectors
+				//  Build_vectors (originalImage , vectors , numOfRows , numOfCols , widthOfBlock , heightOfBlock );
+				ArrayList<vector> data = v.createVectors(v.originalImage, vectors, numOfRows, numOfCols, widthOfBlock, heightOfBlock);
+				v.QuantizeImage(numOfLevels, data, widthOfBlock, heightOfBlock, vectors, numOfRows, numOfCols);
 	        } 
 	        else if (s.equals("Decompression")) 
 	        { 
-	        	String path = textbox4.getText();
-                try 
-                {
-					vectorQuantization.Decompress(path+"compressed.jpg");
-				} 
-                catch (ClassNotFoundException | IOException e1)
-                {
-					e1.printStackTrace();
-				}
+	        	String path =textbox4.getText();
+	        	v.Decompress(path);
 	        } 
 	        else if (s.equals("Read from file")) 
 	        { 

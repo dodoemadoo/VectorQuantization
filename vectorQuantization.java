@@ -1,5 +1,11 @@
-import java.io.*;
-import java.util.*;
+
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Formatter;
+import java.util.Scanner;
+import javax.imageio.ImageIO;
 
 class vector
 {
@@ -8,20 +14,17 @@ class vector
     double [][] data ;
 
     public vector () {}
-    public vector(int width, int height) 
-    {
+    public vector(int width, int height) {
         this.width = width;
         this.height = height;
         this.data = new double [height][width];
     }
 
-    public int getWidth()
-    {
+    public int getWidth() {
         return width;
     }
 
-    public void setWidth(int width) 
-    {
+    public void setWidth(int width) {
         this.width = width;
     }
 
@@ -29,20 +32,19 @@ class vector
         return height;
     }
 
-    public void setHeight(int height)
-    {
+    public void setHeight(int height) {
         this.height = height;
     }
 
-    public double[][] getData() 
-    {
+    public double[][] getData() {
         return data;
     }
 
-    public void setData(double[][] data)
-    {
+    public void setData(double[][] data) {
         this.data = data;
     }
+
+
 }
 
 class split_element
@@ -52,135 +54,121 @@ class split_element
 
     public split_element() {}
 
-    public split_element(vector value ,ArrayList<vector> assoicated )
-    {
+    public split_element(vector value ,ArrayList<vector> assoicated ) {
         this.value = value;
         this.assoicated = assoicated ;
     }
 
-    public vector getValue()
-    {
+    public vector getValue() {
         return value;
     }
 
-    public void setValue(vector value) 
-    {
+    public void setValue(vector value) {
         this.value = value;
     }
 
-    public ArrayList<vector> getAssoicated()
-    {
+    public ArrayList<vector> getAssoicated() {
         return assoicated;
     }
 
-    public void setAssoicated(ArrayList<vector> assoicated) 
-    {
+    public void setAssoicated(ArrayList<vector> assoicated) {
         this.assoicated = assoicated;
     }
+
+
 }
 
+public class vectorQuantization extends javax.swing.JFrame {
 
-public class vectorQuantization 
-{
-    void ShowVector ( vector v)
+    public vectorQuantization()
     {
-        for (int i=0 ; i<v.height ; i++ )
-        {
-            for (int j=0 ; j<v.width ; j++)
-            {
-                System.out.print(v.data[i][j] + "  ");
-            }
-            System.out.println();
-        }
-
-        System.out.println("---------------------------");
+        System.out.println("Hello World...|");
     }
 
-    ArrayList <vector> createVectors (int [][] originalImage , vector [][] vectors, int numOfRows , int numOfCols , int blockWidth , int blockHeight)
-    {
+
+    ArrayList<vector> createVectors(int[][] originalImage, vector[][] vectors,
+                                    int numOfRows, int numOfCols, int blockWidth, int blockHeight) {
 
         ArrayList<vector> picVectors = new ArrayList<>();
 
-        vector tempVector ;
+        vector tempVector;
 
-        for (int i=0 ; i<originalImage.length ; i+=blockHeight)
-        {
-            for (int j=0 ; j<originalImage[0].length ; j+=blockWidth)
-            {
-                int x = i ; int z = j ;
+        for (int i = 0; i < originalImage.length; i += blockHeight) {
+            for (int j = 0; j < originalImage[0].length; j += blockWidth) {
+                int x = i;
+                int z = j;
 
-                tempVector = new vector ( blockWidth , blockHeight );
+                tempVector = new vector(blockWidth, blockHeight);
 
-                for (int n=0 ; n<blockHeight ; n++)
-                {
-                    for (int m=0 ; m<blockWidth ; m++)
-                    {
-                        tempVector.data[n][m]= originalImage[x][z++];
+                for (int n = 0; n < blockHeight; n++) {
+                    for (int m = 0; m < blockWidth; m++) {
+                        tempVector.data[n][m] = originalImage[x][z++];
                     }
 
-                    x++;   z=j;
+                    x++;
+                    z = j;
                 }
 
                 picVectors.add(tempVector);
 
             }
         }
-        int index =0 ;
+        int index = 0;
 
-        for (int i=0 ; i<numOfRows ; i++) 
+        for (int i = 0; i < numOfRows; i++) // filling the new matrix that consists of vectors onli
         {
-            for (int j=0 ; j<numOfCols ; j++)
-            {
+            for (int j = 0; j < numOfCols; j++) {
                 vectors[i][j] = picVectors.get(index++);
             }
         }
 
-        return picVectors ;
+        return picVectors;
     }
 
-    int indxOF_min_distance (ArrayList <Double> distance_difference )
-    {
-        double min_diff = distance_difference.get(0); 
-        int indx = 0 ;
-        for (int i=1 ; i<distance_difference.size() ; i++)
-        {
-            if ( distance_difference.get(i) < min_diff)
-            {
+    int indxOF_min_distance(ArrayList<Double> distance_difference) {
+        double min_diff = distance_difference.get(0); // assume first element is the min
+        int indx = 0;
+
+        for (int i = 1; i < distance_difference.size(); i++) {
+            if (distance_difference.get(i) < min_diff) {
                 min_diff = distance_difference.get(i);
-                indx = i ;
+                indx = i;
             }
-
         }
-        return indx ;
+        return indx;
     }
 
-    ArrayList<vector> associate ( ArrayList<vector> split , ArrayList <vector> data  ) 
+    ArrayList<vector> associate(ArrayList<vector> split, ArrayList<vector> data) // associate ang return avg
     {
-        ArrayList <split_element> Split = new ArrayList<>();
-        ArrayList <vector> Averages = new ArrayList<> ();// to store the average of nearest vectors of a specific split vector
+
+        ArrayList<split_element> Split = new ArrayList<>();
+        ArrayList<vector> Averages = new ArrayList<>();// to store the average of nearest vectors of a specific split vector
+
         int width = data.get(0).width;
-        int height = data.get(0).height ;
-        for (int i = 0; i < split.size(); i++)  
+        int height = data.get(0).height;
+
+        for (int i = 0; i < split.size(); i++)  // inilialization
         {
-            split_element initial = new split_element() ;
+            split_element initial = new split_element();
             initial.setValue(split.get(i));
             Split.add(initial);
         }
 
-        for (int i=0 ; i<data.size() ; i++) // find nearest vectors
+        for (int i = 0; i < data.size(); i++) // find nearest vectors
         {
             vector cur = data.get(i);
-            ArrayList <Double> distance_difference = new ArrayList<> ();        //storing differences for euclidean distance
-            for (int j=0 ; j<split.size() ;j++)     //calculating distance between every original vector and split vector
+            ArrayList<Double> distance_difference = new ArrayList<>();        //storing differences for euclidean distance
+
+
+            for (int j = 0; j < split.size(); j++)     //calculating distance between every original vector and split vector
             {
-                double total_diff = 0 ;
-                for (int w=0 ; w<width ; w++)
-                {
-                    for (int h=0 ; h<height ; h++)
-                    {
-                        double value = cur.data[w][h]-split.get(j).data[w][h];
-                        double distanc_diff =  Math.pow( value , 2);
-                        total_diff +=distanc_diff ;
+                double total_diff = 0;
+
+                for (int w = 0; w < width; w++) {
+                    for (int h = 0; h < height; h++) {
+                        double value = cur.data[w][h] - split.get(j).data[w][h];
+                        double distanc_diff = Math.pow(value, 2);
+                        total_diff += distanc_diff;
                     }
                 }
 
@@ -188,35 +176,32 @@ public class vectorQuantization
 
             }
 
-            int indx = indxOF_min_distance (distance_difference);
+            int indx = indxOF_min_distance(distance_difference);
 
-            ArrayList <vector> cur_associated = Split.get(indx).getAssoicated();
+            ArrayList<vector> cur_associated = Split.get(indx).getAssoicated();
 
             cur_associated.add(cur);
 
-            split_element New = new split_element(Split.get(indx).getValue() , cur_associated);
+            split_element New = new split_element(Split.get(indx).getValue(), cur_associated);
 
-            Split.set(indx , New );
+            Split.set(indx, New);
 
         }
 
-        for (int i=0 ; i<Split.size() ; i++) // calculate average for the associated values
+        for (int i = 0; i < Split.size(); i++) // calculate average for the associated values
         {
             int size = Split.get(i).getAssoicated().size();     //number of nearest vectors of a specific split vector
-            vector avg = new vector(width , height);
+            vector avg = new vector(width, height);
 
-            for (int w = 0; w < width; w++)
-            {
-                for (int h = 0; h < height; h++)
-                {
-                    double total = 0 ;
+            for (int w = 0; w < width; w++) {
+                for (int h = 0; h < height; h++) {
+                    double total = 0;
 
-                    for (int j = 0; j < size; j++)
-                    {
-                        total+= Split.get(i).getAssoicated().get(j).data[w][h];
+                    for (int j = 0; j < size; j++) {
+                        total += Split.get(i).getAssoicated().get(j).data[w][h];
                     }
 
-                    avg.data[w][h]= total/size;
+                    avg.data[w][h] = total / size;
                 }
 
             }
@@ -225,34 +210,29 @@ public class vectorQuantization
 
         }
 
-        return Averages ;
+        return Averages;
     }
 
-    ArrayList<vector> Split (ArrayList <vector> Averages ,  ArrayList <vector> originalVector , int levels ) // split original averages
+    ArrayList<vector> Split(ArrayList<vector> Averages, ArrayList<vector> originalVector, int levels) // split original averages
     {
-        int width = Averages.get(0).width ;
-        int height = Averages.get(0).height ;
+        int width = Averages.get(0).width;
+        int height = Averages.get(0).height;
 
-        for (int i=0 ; i<Averages.size() ; i++)
-        {
-            if (Averages.size()<levels)
-            {
+        for (int i = 0; i < Averages.size(); i++) {
+            if (Averages.size() < levels) {
 
-                ArrayList <vector> split = new ArrayList<>();
+                ArrayList<vector> split = new ArrayList<>();
 
-                for (int j=0 ; j<Averages.size() ; j++)
-                {
-                    vector left = new vector( width , height);
-                    vector right = new vector( width , height);
+                for (int j = 0; j < Averages.size(); j++) {
+                    vector left = new vector(width, height);
+                    vector right = new vector(width, height);
 
-                    for (int w=0 ; w<width ; w++)
-                    {
-                        for (int h=0 ; h<height ; h++)
-                        {
-                            int num = (int)Averages.get(j).data[w][h] ;
+                    for (int w = 0; w < width; w++) {
+                        for (int h = 0; h < height; h++) {
+                            int num = (int) Averages.get(j).data[w][h];
 
-                            left.data[w][h]= num;
-                            right.data[w][h]= num+1;
+                            left.data[w][h] = num;
+                            right.data[w][h] = num + 1;
 
                         }
 
@@ -263,81 +243,68 @@ public class vectorQuantization
                 }
 
                 Averages.clear();
-                Averages = associate( split , originalVector);
+                Averages = associate(split, originalVector);
 
-                i=0 ;
+                i = 0;
 
-            }
-            else {
-                break;}
-
-        }
-
-        return Averages ;
-    }
-
-    ArrayList<vector> modify ( ArrayList<vector> prev_Averages , ArrayList<vector> new_Averages , ArrayList<vector> data  )
-    {
-        while (true)
-        {
-            int width = new_Averages.get(0).width;
-            int height = new_Averages.get(0).height;
-            int totaldiff = 0 ;
-            int avgdiff = 0 ;
-
-            for (int i=0 ; i<new_Averages.size() ; i++)
-            {
-                double DiffOf2vec =0 ;
-
-                for (int w=0 ; w<width ; w++)
-                {
-                    for (int h=0 ; h<height ; h++)
-                    {
-                        DiffOf2vec += Math.abs(prev_Averages.get(i).data[w][h] - new_Averages.get(i).data[w][h]) ;
-                    }
-                }
-
-                totaldiff+=DiffOf2vec;
-            }
-
-            avgdiff = totaldiff / prev_Averages.size() ;
-
-            if (avgdiff < 0.0001 )
-            {
+            } else {
                 break;
             }
 
-            else
-            {
-                prev_Averages = new_Averages ;
-                new_Averages = associate( new_Averages , data);
+        }
+
+        return Averages;
+    }
+
+    ArrayList<vector> modify(ArrayList<vector> prev_Averages, ArrayList<vector> new_Averages, ArrayList<vector> data) {
+        while (true) {
+            int width = new_Averages.get(0).width;
+            int height = new_Averages.get(0).height;
+            int totaldiff = 0;
+            int avgdiff = 0;
+
+            for (int i = 0; i < new_Averages.size(); i++) {
+                double DiffOf2vec = 0;
+
+                for (int w = 0; w < width; w++) {
+                    for (int h = 0; h < height; h++) {
+                        DiffOf2vec += Math.abs(prev_Averages.get(i).data[w][h] - new_Averages.get(i).data[w][h]);
+                    }
+                }
+
+                totaldiff += DiffOf2vec;
+            }
+
+            avgdiff = totaldiff / prev_Averages.size();
+
+            if (avgdiff < 0.0001) {
+                break;
+            } else {
+                prev_Averages = new_Averages;
+                new_Averages = associate(new_Averages, data);
             }
 
         }
 
-        return new_Averages ;
+        return new_Averages;
 
     }
 
-    void QuantizeImage(int numoflevels , ArrayList <vector> data , int widthOfBlock , int heightOfBlock , vector [][] vectors , int numOfRows , int numOfCols  )
-    {
-        vector first_avg = new vector( widthOfBlock , heightOfBlock );
+    void QuantizeImage(int numoflevels, ArrayList<vector> data, int widthOfBlock, int heightOfBlock, vector[][] vectors, int numOfRows, int numOfCols) {
+        vector first_avg = new vector(widthOfBlock, heightOfBlock);
 
         ArrayList<vector> Averages = new ArrayList<>();         //ArrayList to store first average and all later ones.
 
-        for (int w = 0; w < widthOfBlock; w++)
-        {
-            for (int h = 0; h < heightOfBlock; h++)
-            {
-                double total = 0 ;
+        for (int w = 0; w < widthOfBlock; w++) {
+            for (int h = 0; h < heightOfBlock; h++) {
+                double total = 0;
 
-                for (int i = 0; i < data.size(); i++)
-                {
+                for (int i = 0; i < data.size(); i++) {
                     total += data.get(i).data[w][h];
 
                 }
 
-                first_avg.data[w][h] = total/data.size();       //average of all vectors
+                first_avg.data[w][h] = total / data.size();       //average of all vectors
 
             }
 
@@ -345,57 +312,50 @@ public class vectorQuantization
 
         Averages.add(first_avg);
 
-        Averages = Split (Averages , data , numoflevels );
+        Averages = Split(Averages, data, numoflevels);
 
-        ArrayList<vector> prev_Averages = Averages ;
-        ArrayList<vector> new_Averages = associate( Averages , data);       //finding nearest vectors
+        ArrayList<vector> prev_Averages = Averages;
+        ArrayList<vector> new_Averages = associate(Averages, data);       //finding nearest vectors
 
-        new_Averages = modify(prev_Averages, new_Averages, data);
+        new_Averages = modify(prev_Averages, new_Averages, data);       //checking for no change condition
 
 
         ArrayList<vector> codeBook = new ArrayList<>();
 
-        for (int i=0 ; i<new_Averages.size() ; i++)
-        {
+        for (int i = 0; i < new_Averages.size(); i++) {
             codeBook.add(new_Averages.get(i));
         }
 
 
-        int indx =0 ;
+        int indx = 0;
 
-        for (int i=0 ; i<widthOfBlock ; i++) // filling the new matrix that consists of vectors onli
+        for (int i = 0; i < widthOfBlock; i++) // filling the new matrix that consists of vectors onli
         {
-            for (int j=0 ; j<numOfCols ; j++)
-            {
+            for (int j = 0; j < numOfCols; j++) {
                 vectors[i][j] = data.get(indx++);
             }
         }
 
-        compress (codeBook , vectors );
+        compress(codeBook, vectors);
 
     }
 
-    void compress ( ArrayList<vector> codeBook , vector [][] vectors )      //similar to associate
+    void compress(ArrayList<vector> codeBook, vector[][] vectors)      //similar to associate
     {
-        int Rows = vectors.length ;
-        int Cols = vectors[0].length ;
-        int [][] comp_image = new int [Rows][Cols];
+        int Rows = vectors.length;
+        int Cols = vectors[0].length;
+        int[][] comp_image = new int[Rows][Cols];
 
-        for (int i=0 ; i<Rows ; i++)
-        {
-            for (int j=0 ; j<Cols ; j++)
-            {
+        for (int i = 0; i < Rows; i++) {
+            for (int j = 0; j < Cols; j++) {
                 vector cur = vectors[i][j];
-                ArrayList <Double> distance_difference = new ArrayList<> ();
+                ArrayList<Double> distance_difference = new ArrayList<>();
 
-                for (int k=0 ; k<codeBook.size() ;k++)
-                {
-                    double total_diff = 0 ;
+                for (int k = 0; k < codeBook.size(); k++) {
+                    double total_diff = 0;
 
-                    for (int w=0 ; w<codeBook.get(0).width ; w++)
-                    {
-                        for (int h = 0; h < codeBook.get(0).height; h++)
-                        {
+                    for (int w = 0; w < codeBook.get(0).width; w++) {
+                        for (int h = 0; h < codeBook.get(0).height; h++) {
                             double value = cur.data[w][h] - codeBook.get(k).data[w][h];
                             double distanc_diff = Math.pow(value, 2);
                             total_diff += distanc_diff;
@@ -405,44 +365,39 @@ public class vectorQuantization
                     distance_difference.add(total_diff);
                 }
 
-                int indx = indxOF_min_distance (distance_difference);
-                comp_image[i][j]= indx ;
+                int indx = indxOF_min_distance(distance_difference);
+                comp_image[i][j] = indx;
 
             }
         }
-        Save_CodeBook_CompImg ( codeBook , comp_image);
+
+
+        Save_CodeBook_CompImg(codeBook, comp_image);
+
     }
 
     Scanner sc;
 
     public void open_file(String FileName) {
-        try
-        {
+        try {
             sc = new Scanner(new File(FileName));
-        } 
-        catch (Exception e) 
-        {
-        	e.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
-    public void close_file() 
-    {
+    public void close_file() {
         sc.close();
     }
 
     Formatter out; //34an yktb el tag be format el string
 
-    public void openfile(String pass) 
-    {
-        try 
-        {
+    public void openfile(String pass) {
+        try {
             out = new Formatter(pass);
-        } 
-        catch (Exception e) 
-        {
-        	e.printStackTrace();
+        } catch (Exception e) {
         }
+
     }
 
     public void closefile() {
@@ -458,31 +413,26 @@ public class vectorQuantization
     }
 
 
-    void Decompress ()
-    {
+    void Decompress(String path) {
 
-        ArrayList<vector> codeBook = new ArrayList <vector>();
-        int [][] comp_image = new int [1][1] ;
-        comp_image = Reconstruct( codeBook , comp_image);
-        int [][] Decomp_image = new int [originalImage.length][originalImage[0].length];
+        ArrayList<vector> codeBook = new ArrayList<vector>();
+        int[][] comp_image = new int[1][1];
+        comp_image = Reconstruct(codeBook, comp_image);
+        int[][] Decomp_image = new int[originalImage.length][originalImage[0].length];
 
-        for (int i=0 ; i<comp_image.length ; i++)
-        {
-            for (int j=0 ; j<comp_image[0].length ; j++)
-            {
+        for (int i = 0; i < comp_image.length; i++) {
+            for (int j = 0; j < comp_image[0].length; j++) {
                 vector cur = new vector();
                 cur = codeBook.get(comp_image[i][j]);
 
-                int cornerx = i*cur.height;
-                int cornery = j*cur.width ;
+                int cornerx = i * cur.height;
+                int cornery = j * cur.width;
 
 
-                for (int h=0 ; h<cur.height ; h++)
-                {
+                for (int h = 0; h < cur.height; h++) {
 
-                    for (int k=0 ; k<cur.width ; k++)
-                    {
-                        Decomp_image[cornerx+h][cornery+k] = (int) cur.data[h][k];
+                    for (int k = 0; k < cur.width; k++) {
+                        Decomp_image[cornerx + h][cornery + k] = (int) cur.data[h][k];
                     }
                 }
 
@@ -492,13 +442,12 @@ public class vectorQuantization
 
         System.out.println("################################################&&&&&&&&&&&&&&&&&&&&&&&&&&");
         System.out.println(Decomp_image);
-        Image.writeImage(Decomp_image, "Decompress.jpg", Decomp_image[0].length, Decomp_image.length);
+        Image.writeImage(Decomp_image, Decomp_image[0].length, Decomp_image.length, path);
 
 
     }
 
-    void Save_CodeBook_CompImg ( ArrayList<vector> codeBook , int [][] comp_image )
-    {
+    void Save_CodeBook_CompImg(ArrayList<vector> codeBook, int[][] comp_image) {
         openfile("CompressFile.txt");
         String codeBookSize = "" + codeBook.size();
         String WidthOfBlock = "" + codeBook.get(0).width;
@@ -508,14 +457,11 @@ public class vectorQuantization
         write(WidthOfBlock);
         write(heightOfBlock);
 
-        for (int i=0 ; i<codeBook.size() ; i++)
-        {
-            for (int w=0 ; w<codeBook.get(i).width ; w++)
-            {
+        for (int i = 0; i < codeBook.size(); i++) {
+            for (int w = 0; w < codeBook.get(i).width; w++) {
                 String row = "";
 
-                for (int h=0 ; h<codeBook.get(i).height ; h++)
-                {
+                for (int h = 0; h < codeBook.get(i).height; h++) {
                     row += codeBook.get(i).data[w][h] + " ";        //writing elements of each codebook vector to file.
                 }
 
@@ -524,21 +470,20 @@ public class vectorQuantization
 
         }
 
+        // write("------------------------------------------------------------");
 
-        String com_image_height = "" + comp_image.length ;
+        String com_image_height = "" + comp_image.length;
         write(com_image_height);
-        String com_image_width = "" + comp_image[0].length ;
+        String com_image_width = "" + comp_image[0].length;
         write(com_image_width);
 
         //writing codebook codes to file
 
-        for (int i=0 ; i<comp_image.length ; i++)
-        {
+        for (int i = 0; i < comp_image.length; i++) {
             String row = "";
 
-            for (int j=0 ; j<comp_image[0].length ; j++)
-            {
-                row+= comp_image[i][j] +" ";
+            for (int j = 0; j < comp_image[0].length; j++) {
+                row += comp_image[i][j] + " ";
             }
 
             write(row);
@@ -548,87 +493,51 @@ public class vectorQuantization
     }
 
 
-    int [][] Reconstruct( ArrayList<vector> codeBook , int [][] comp_image)
-    {
+    int[][] Reconstruct(ArrayList<vector> codeBook, int[][] comp_image) {
         open_file("CompressFile.txt");
+        // System.out.println(sc.nextLine());
         int codeBookSize = Integer.parseInt(sc.nextLine());
         int WidthOfBlock = Integer.parseInt(sc.nextLine());
         int heightOfBlock = Integer.parseInt(sc.nextLine());
 
-        for (int i=0 ; i<codeBookSize ; i++)
-        {
-            vector cur = new vector(WidthOfBlock , heightOfBlock);
+        for (int i = 0; i < codeBookSize; i++) {
+            vector cur = new vector(WidthOfBlock, heightOfBlock);
 
-            for (int w=0 ; w<WidthOfBlock ; w++)
-            {
+            for (int w = 0; w < WidthOfBlock; w++) {
                 String row = sc.nextLine();
-                String [] elements = row.split(" ");
+                String[] elements = row.split(" ");
 
-                for (int h=0 ; h<heightOfBlock ; h++)
-                {
-                    cur.data[w][h]= Double.parseDouble(elements[h]);
+                for (int h = 0; h < heightOfBlock; h++) {
+                    //System.out.println("elements = " +elements[h]);
+                    cur.data[w][h] = Double.parseDouble(elements[h]);
+                    // System.out.println("Data = " +  cur.data[w][h]);
                 }
 
             }
 
             codeBook.add(cur);
 
-        } 
+        }
 
         int com_image_height = Integer.parseInt(sc.nextLine());
-        int com_image_width =  Integer.parseInt(sc.nextLine());
-        comp_image = new int [com_image_height][com_image_width];
+        int com_image_width = Integer.parseInt(sc.nextLine());
+        comp_image = new int[com_image_height][com_image_width];
 
-        for (int i=0 ; i<comp_image.length ; i++)
-        {
+        for (int i = 0; i < comp_image.length; i++) {
             String line = sc.nextLine();
-            String [] row = line.split(" ");
+            String[] row = line.split(" ");
 
-            for (int j=0 ; j<comp_image[0].length ; j++)
-            {
+            for (int j = 0; j < comp_image[0].length; j++) {
                 comp_image[i][j] = Integer.parseInt(row[j]);
             }
 
         }
+
         close_file();
 
-        return comp_image ;
+        return comp_image;
+
     }
 
-    public  int [][] originalImage ;
-
-
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt)
-    {//GEN-FIRST:event_jButton1ActionPerformed
-
-        int numOfLevels = Integer.parseInt(jTextField1.getText()) ;
-        int widthOfBlock = Integer.parseInt(jTextField2.getText()) ;
-        int heightOfBlock = Integer.parseInt(jTextField3.getText()) ;
-        originalImage  = readImage("Original input.jpg");
-
-//        int [][] originalImage = new int[6][6];
-//        Scanner sc = new Scanner (System.in);
-//        for (int i=0 ; i<6 ; i++)
-//        {
-//            for (int j=0 ; j<6 ; j++)
-//            {
-//                originalImage[i][j]= sc.nextInt();
-//            }
-//        }
-
-        int numOfRows = originalImage.length /heightOfBlock ; // lel new matrix li mtkwna mn vectors
-        int numOfCols = originalImage[0].length /heightOfBlock ;
-        vector [][] vectors = new vector [numOfRows][numOfCols]; // 2D array consist of vectors
-        //  Build_vectors (originalImage , vectors , numOfRows , numOfCols , widthOfBlock , heightOfBlock );
-        ArrayList <vector> data = createVectors (originalImage , vectors , numOfRows , numOfCols , widthOfBlock , heightOfBlock );
-        QuantizeImage(numOfLevels , data , widthOfBlock , heightOfBlock ,vectors , numOfRows , numOfCols  );
-
-
-    }//GEN-LAST:event_jButton1ActionPerformed
-
-    /**
-     * @param args the command line arguments
-     */
-
-
+    public int[][] originalImage;
 }
